@@ -1,0 +1,92 @@
+apiVersion: k0sctl.k0sproject.io/v1beta1
+kind: Cluster
+metadata:
+  name: oracle
+spec:
+  hosts:
+  - ssh:
+      address: oracle.tibeer.de
+      user: ubuntu
+      port: 22
+      keyPath: /Users/columbia/.ssh/id_rsa
+    role: single
+  k0s:
+    version: 1.24.2+k0s.0
+    dynamicConfig: false
+    config:
+      apiVersion: k0s.k0sproject.io/v1beta1
+      kind: ClusterConfig
+      metadata:
+        name: oracle
+      spec:
+        api:
+          k0sApiPort: 9443
+          port: 6443
+        installConfig:
+          users:
+            etcdUser: etcd
+            kineUser: kube-apiserver
+            konnectivityUser: konnectivity-server
+            kubeAPIserverUser: kube-apiserver
+            kubeSchedulerUser: kube-scheduler
+        konnectivity:
+          adminPort: 8133
+          agentPort: 8132
+        network:
+          kubeProxy:
+            disabled: false
+            mode: iptables
+          kuberouter:
+            autoMTU: true
+            mtu: 0
+            peerRouterASNs: ""
+            peerRouterIPs: ""
+          podCIDR: 10.244.0.0/16
+          provider: kuberouter
+          serviceCIDR: 10.96.0.0/12
+        #network:
+        #  kubeProxy:
+        #    disabled: true
+        #    mode: iptables
+        #  calico:
+        #    mode: vxlan
+        #    overlay: Always
+        #    vxlanPort: 4789
+        #    vxlanVNI: 4096
+        #    mtu: 0
+        #    wireguard: false
+        #    flexVolumeDriverPath: /usr/libexec/k0s/kubelet-plugins/volume/exec/nodeagent~uds
+        #    ipAutodetectionMethod: ""
+        #  podCIDR: 192.168.0.0/16
+        #  provider: calico
+        #  serviceCIDR: 10.96.0.0/12
+        podSecurityPolicy:
+          defaultPolicy: 00-k0s-privileged
+        storage:
+          type: etcd
+        telemetry:
+          enabled: false
+        images:
+          konnectivity:
+            image: k8s.gcr.io/kas-network-proxy/proxy-agent
+            version: v0.0.25
+          metricsserver:
+            image: k8s.gcr.io/metrics-server/metrics-server
+            version: v0.5.0
+          kubeproxy:
+            image: k8s.gcr.io/kube-proxy
+            version: v1.24.2
+          coredns:
+            image: k8s.gcr.io/coredns/coredns
+            version: v1.7.0
+          calico:
+            cni:
+              image: docker.io/calico/cni
+              version: v3.18.1
+            node:
+              image: docker.io/calico/node
+              version: v3.18.1
+            kubecontrollers:
+              image: docker.io/calico/kube-controllers
+              version: v3.18.1
+          default_pull_policy: Always
